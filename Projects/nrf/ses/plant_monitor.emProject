@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="blinky_pca10056" target="8" version="2">
-  <project Name="blinky_pca10056">
+<solution Name="plant_monitor" target="8" version="2">
+  <project Name="plant_monitor">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
