@@ -53,22 +53,110 @@
 #include "nrf_delay.h"
 #include "boards.h"
 
+#include "app_util_platform.h"
+#include "app_error.h"
+#include "nrf_drv_twi.h"
+#include "nrf_delay.h"
+
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+
+/* TWI instance ID. */
+#if TWI0_ENABLED
+#define TWI_INSTANCE_ID     0
+#elif TWI1_ENABLED
+#define TWI_INSTANCE_ID     1
+#endif
+
+ /* Number of possible TWI addresses. */
+ #define TWI_ADDRESSES      127
+
+const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
+uint8_t sample_data[6];
+
+void twi_init (void)
+{
+    ret_code_t err_code;
+
+    const nrf_drv_twi_config_t twi_config = {
+       .scl                = ARDUINO_SCL_PIN,
+       .sda                = ARDUINO_SDA_PIN,
+       .frequency          = NRF_DRV_TWI_FREQ_100K,
+       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+       .clear_bus_init     = false
+    };
+
+    err_code = nrf_drv_twi_init(&m_twi, &twi_config, NULL, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&m_twi);
+}
+
+
+static int read_data_shtc(float *temperature, float *humidity)
+{
+
+  uint8_t address = 0x70;
+  uint8_t wakeup_command[2] = {0x35, 0x17};
+  uint8_t sleep_command[2] = {0xB0, 0x98};
+  uint8_t measure_command[2] = {0x78, 0x66};
+  
+  NRF_LOG_INFO("Read temp");
+  NRF_LOG_FLUSH();
+
+  nrf_drv_twi_tx(&m_twi, address, wakeup_command, sizeof(wakeup_command), false);
+  nrf_delay_ms(1);
+
+  nrf_drv_twi_tx(&m_twi, address, measure_command, sizeof(measure_command), false);
+  nrf_delay_ms(20);
+  nrf_drv_twi_rx(&m_twi, address, sample_data, sizeof(sample_data));
+
+  // TODO: Verify checksum
+
+  *temperature = -45 + (175.0f)*(sample_data[0] << 8U) | sample_data[1]) / (65536);
+  *humidity = (100.0f)*((sample_data[3] << 8U) | sample_data[4]) / (65536);
+
+  return 0; // TODO: Return Error
+}
+
+
 /**
  * @brief Function for application main entry.
  */
 int main(void)
 {
-    /* Configure board. */
-    bsp_board_init(BSP_INIT_LEDS);
+   ret_code_t err_code;
+    uint8_t address;
+    uint8_t sample_data;
+    bool detected_device = false;
 
-    /* Toggle LEDs. */
+    APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
+    NRF_LOG_DEFAULT_BACKENDS_INIT();
+
+    NRF_LOG_INFO("TWI scanner started.");
+    NRF_LOG_FLUSH();
+    twi_init();
+
+    float temp;
+    float hum;
+
+     #if 0
+    read_data_shtc(&temp, &hum);
+    NRF_LOG_INFO("Temp is " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(temp));
+    NRF_LOG_INFO("Hum " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(hum));
+    NRF_LOG_FLUSH();
+    #endif
+
     while (true)
     {
-        for (int i = 0; i < LEDS_NUMBER; i++)
-        {
-            bsp_board_led_invert(i);
-            nrf_delay_ms(500);
-        }
+        /* Empty loop. */
+         read_data_shtc(&temp, &hum);
+         NRF_LOG_INFO("Temp is " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(temp));
+         NRF_LOG_INFO("Hum " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(hum));
+         NRF_LOG_FLUSH();
+
+         nrf_delay_ms(1000);
     }
 }
 
