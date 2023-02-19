@@ -106,15 +106,15 @@ static int read_data_shtc(float *temperature, float *humidity)
   NRF_LOG_FLUSH();
 
   nrf_drv_twi_tx(&m_twi, address, wakeup_command, sizeof(wakeup_command), false);
-  nrf_delay_ms(1);
+  nrf_delay_us(250);  // Wakeup Time based in datasheet.
 
   nrf_drv_twi_tx(&m_twi, address, measure_command, sizeof(measure_command), false);
-  nrf_delay_ms(20);
+  nrf_delay_ms(20);  // Measure Time for Normal Mode.
   nrf_drv_twi_rx(&m_twi, address, sample_data, sizeof(sample_data));
 
   // TODO: Verify checksum
 
-  *temperature = -45 + (175.0f)*(sample_data[0] << 8U) | sample_data[1]) / (65536);
+  *temperature = -45 + (175.0f)*((sample_data[0] << 8U) | sample_data[1]) / (65536);
   *humidity = (100.0f)*((sample_data[3] << 8U) | sample_data[4]) / (65536);
 
   return 0; // TODO: Return Error
