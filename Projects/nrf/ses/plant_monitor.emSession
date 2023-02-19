@@ -70,7 +70,7 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="33" y="119" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../Application/main.c" selected="1" top="97" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="135" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../Application/main.c" selected="1" top="124" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="54" y="9" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/libraries/log/src/nrf_log_frontend.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="11" y="555" useTextEdit="1" openedFrom="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Application/main.c" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/integration/nrfx/legacy/nrf_drv_twi.h" selected="0" top="537" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="50" y="3929" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../config/sdk_config.h" selected="0" top="3919" codecName="Default"/>
@@ -78,7 +78,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="17" y="74" useTextEdit="1" openedFrom="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Application/main.c" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/boards/boards.h" selected="0" top="57" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="53" y="91" useTextEdit="1" openedFrom="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Middleware/nrf/nRF5_SDK_17_1_0/components/boards/boards.h" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/boards/pca10059.h" selected="0" top="81" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="32" y="25" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="C:/nRF5_SDK_17.1.0_ddde560/integration/nrfx/legacy/nrf_drv_twi.c" selected="0" top="81" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="21" y="63" useTextEdit="1" openedFrom="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Application/main.c" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/libraries/delay/nrf_delay.h" selected="0" top="36" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="54" useTextEdit="1" openedFrom="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Application/main.c" useBinaryEdit="0" left="0" path="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/libraries/delay/nrf_delay.h" selected="0" top="42" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="plant_monitor" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/russel/Documents/Embedded/projects/plant_monitor/Middleware/nrf/nRF5_SDK_17_1_0/components/libraries/log/src" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
