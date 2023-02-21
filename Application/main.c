@@ -58,6 +58,9 @@
 #include "nrf_drv_twi.h"
 #include "nrf_delay.h"
 
+#include "nrf_drv_saadc.h"
+#include "nrf_drv_ppi.h"
+
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -74,6 +77,25 @@
 
 const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 uint8_t sample_data[6];
+
+void saadc_callback_handler(nrf_drv_saadc_evt_t const *p_event)
+{
+}
+
+
+void saadc_init(void)
+{
+  ret_code_t err_code;
+
+  nrf_saadc_channel_config_t channel_config = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN0);
+
+  err_code = nrf_drv_saadc_init(NULL, saadc_callback_handler);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = nrfx_saadc_channel_init(0, &channel_config);
+  APP_ERROR_CHECK(err_code);
+}
+
 
 void twi_init (void)
 {
@@ -141,19 +163,37 @@ int main(void)
     float temp;
     float hum;
 
-     #if 0
-    read_data_shtc(&temp, &hum);
-    NRF_LOG_INFO("Temp is " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(temp));
-    NRF_LOG_INFO("Hum " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(hum));
-    NRF_LOG_FLUSH();
-    #endif
+    saadc_init();
+    nrf_saadc_value_t adc_val;
+    float lux_val = 0.0f;
+    const float lux_sun = 10000.0f;
+    const float current_sun = 3.59e-3f;
+    const float photo_res_val = 470;
+    float current_photo = 0;
+    float voltage_photo = 0;
+    float voltage_supply = 3.0f;
+    
 
     while (true)
     {
         /* Empty loop. */
          read_data_shtc(&temp, &hum);
-         NRF_LOG_INFO("Temp is " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(temp));
-         NRF_LOG_INFO("Hum " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(hum));
+         NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
+         NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
+         NRF_LOG_FLUSH();
+
+         nrfx_saadc_sample_convert(0, &adc_val);
+         NRF_LOG_INFO("ADC Value: %d", adc_val);
+         NRF_LOG_FLUSH();
+
+         voltage_photo = (voltage_supply / 1024.0f) * adc_val;
+         current_photo = voltage_photo / photo_res_val;
+       
+         NRF_LOG_INFO("Current: " NRF_LOG_FLOAT_MARKER " uA", NRF_LOG_FLOAT(current_photo * 1000000));
+         NRF_LOG_FLUSH();
+
+         lux_val = (current_photo / current_sun) * lux_sun;
+         NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
          NRF_LOG_FLUSH();
 
          nrf_delay_ms(1000);
