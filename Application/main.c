@@ -78,6 +78,66 @@
 
 #include "ble_conn_params.h"
 
+#include "nrf_drv_twi.h"
+#include "nrf_delay.h"
+
+/* TWI instance ID. */
+#if TWI0_ENABLED
+#define TWI_INSTANCE_ID     0
+#elif TWI1_ENABLED
+#define TWI_INSTANCE_ID     1
+#endif
+
+ /* Number of possible TWI addresses. */
+ #define TWI_ADDRESSES      127
+
+const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
+uint8_t sample_data[6];
+
+void twi_init (void)
+{
+    ret_code_t err_code;
+
+    const nrf_drv_twi_config_t twi_config = {
+       .scl                = ARDUINO_SCL_PIN,
+       .sda                = ARDUINO_SDA_PIN,
+       .frequency          = NRF_DRV_TWI_FREQ_100K,
+       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+       .clear_bus_init     = false
+    };
+
+    err_code = nrf_drv_twi_init(&m_twi, &twi_config, NULL, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&m_twi);
+}
+
+static int read_data_shtc(float *temperature, float *humidity)
+{
+
+  uint8_t address = 0x70;
+  uint8_t wakeup_command[2] = {0x35, 0x17};
+  uint8_t sleep_command[2] = {0xB0, 0x98};
+  uint8_t measure_command[2] = {0x78, 0x66};
+  
+  NRF_LOG_INFO("Read temp");
+ // NRF_LOG_FLUSH();
+
+  nrf_drv_twi_tx(&m_twi, address, wakeup_command, sizeof(wakeup_command), false);
+  nrf_delay_us(250);  // Wakeup Time based in datasheet.
+
+  nrf_drv_twi_tx(&m_twi, address, measure_command, sizeof(measure_command), false);
+  nrf_delay_ms(20);  // Measure Time for Normal Mode.
+  nrf_drv_twi_rx(&m_twi, address, sample_data, sizeof(sample_data));
+
+  // TODO: Verify checksum
+
+  *temperature = -45 + (175.0f)*((sample_data[0] << 8U) | sample_data[1]) / (65536);
+  *humidity = (100.0f)*((sample_data[3] << 8U) | sample_data[4]) / (65536);
+
+  return 0; // TODO: Return Error
+}
+
 #define APP_BLE_CONN_CFG_TAG 1U
 #define APP_BLE_OBSERVER_PRIO 3U
 
@@ -517,8 +577,17 @@ static void app_timer_handler(void *p_context)
   new_advdata.p_manuf_specific_data = &manuf_data;
   new_srdata.name_type = BLE_ADVDATA_FULL_NAME;
 
-  
+  /**/
+  #if 1
+  float temp;
+  float hum;
 
+  read_data_shtc(&temp, &hum);
+  NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
+  NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
+ 
+  #endif
+  
   static uint32_t i = 0;
   ++i;
     sensor_data.tempe_data.tempe_val = 37.57f + i;
@@ -619,6 +688,8 @@ int main()
   services_init();
   conn_params_init();
 
+  twi_init();
+
   NRF_LOG_INFO("BLE APP STARTED..");
 
   set_random_static_address();
@@ -631,7 +702,17 @@ int main()
 
   while(1)
   {
-    idle_state_handle();	
+    idle_state_handle();
+    
+    #if 0	
+    /* Empty loop. */
+    float temp, hum;
+         read_data_shtc(&temp, &hum);
+         NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
+         NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
+         NRF_LOG_FLUSH();
+         nrf_delay_ms(1000);
+    #endif
   }
   
 	
