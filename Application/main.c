@@ -182,7 +182,7 @@ void saadc_init(void)
 #define NEXT_CONN_PARMS_UPDATE_DELAY    APP_TIMER_TICKS(30000)
 #define MAX_CONN_PARMS_UPDATE_COUNT     3U
 
-#define LED_INTERVAL APP_TIMER_TICKS(100)
+#define LED_INTERVAL APP_TIMER_TICKS(3000)
 
 
 
@@ -583,7 +583,7 @@ ble_advdata_t new_srdata;
 static void app_timer_handler(void *p_context)
 {
   ret_code_t err_code;
-  NRF_LOG_INFO("APP TIMER");
+  
   nrf_gpio_pin_toggle(LED_4);
   uint8_t manu_data[30];
 
@@ -603,6 +603,13 @@ static void app_timer_handler(void *p_context)
   #if 1
   float temp;
   float hum;
+  float lux_val = 0.0f;
+  float current_photo = 0;
+  float voltage_photo = 0;
+  float voltage_supply = 3.0f;
+  const float lux_sun = 10000.0f;
+  const float current_sun = 3.59e-3f;
+  const float photo_res_val = 470;
 
   read_data_shtc(&temp, &hum);
   NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
@@ -614,10 +621,16 @@ static void app_timer_handler(void *p_context)
 
   nrfx_saadc_sample_convert(0, &adc_val);
   NRF_LOG_INFO("ADC Value: %d", adc_val);
+
+  voltage_photo = (voltage_supply / 1024.0f) * adc_val;
+  current_photo = voltage_photo / photo_res_val;
+
+  lux_val = (current_photo / current_sun) * lux_sun;
+  NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
   
   sensor_data.tempe_data.tempe_val = temp;
   sensor_data.humid_data.humid_val = hum;
-  sensor_data.light_data.light_val = 100;
+  sensor_data.light_data.light_val = lux_val;
   sensor_data.moist_data.moist_val = 50;
 
   pack_sensor_data(&sensor_data, manu_data);
