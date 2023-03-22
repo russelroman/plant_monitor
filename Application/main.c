@@ -373,10 +373,9 @@ int pack_sensor_data(sensor_data_t *sensor_data, uint8_t *ble_manuf_data)
 
   // Check if size of the container is enough
 
-  // Convert the float data from sensors to uint16
-  tempe_data = float_to_uint16(sensor_data->tempe_data.tempe_val);
-  humid_data = float_to_uint16(sensor_data->humid_data.humid_val);
-  moist_data = float_to_uint16(sensor_data->moist_data.moist_val);
+  tempe_data = sensor_data->tempe_data.tempe_val * 100U;
+  humid_data = sensor_data->humid_data.humid_val * 100U;
+  moist_data = sensor_data->moist_data.moist_val * 100U;
   light_data = sensor_data->light_data.light_val;
 
   // Little-Endian Order
