@@ -78,87 +78,13 @@
 
 #include "ble_conn_params.h"
 
-#include "nrf_drv_twi.h"
 #include "nrf_delay.h"
 
 #include "nrf_drv_saadc.h"
-#include "nrf_drv_ppi.h"
 
-/* TWI instance ID. */
-#if TWI0_ENABLED
-#define TWI_INSTANCE_ID     0
-#elif TWI1_ENABLED
-#define TWI_INSTANCE_ID     1
-#endif
-
- /* Number of possible TWI addresses. */
- #define TWI_ADDRESSES      127
-
-const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
-uint8_t sample_data[6];
-
-void twi_init (void)
-{
-    ret_code_t err_code;
-
-    const nrf_drv_twi_config_t twi_config = {
-       .scl                = ARDUINO_SCL_PIN,
-       .sda                = ARDUINO_SDA_PIN,
-       .frequency          = NRF_DRV_TWI_FREQ_100K,
-       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
-       .clear_bus_init     = false
-    };
-
-    err_code = nrf_drv_twi_init(&m_twi, &twi_config, NULL, NULL);
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_twi_enable(&m_twi);
-}
-
-static int read_data_shtc(float *temperature, float *humidity)
-{
-
-  uint8_t address = 0x70;
-  uint8_t wakeup_command[2] = {0x35, 0x17};
-  uint8_t sleep_command[2] = {0xB0, 0x98};
-  uint8_t measure_command[2] = {0x78, 0x66};
-  
-  NRF_LOG_INFO("Read temp");
- // NRF_LOG_FLUSH();
-
-  nrf_drv_twi_tx(&m_twi, address, wakeup_command, sizeof(wakeup_command), false);
-  nrf_delay_us(250);  // Wakeup Time based in datasheet.
-
-  nrf_drv_twi_tx(&m_twi, address, measure_command, sizeof(measure_command), false);
-  nrf_delay_ms(20);  // Measure Time for Normal Mode.
-  nrf_drv_twi_rx(&m_twi, address, sample_data, sizeof(sample_data));
-
-  // TODO: Verify checksum
-
-  *temperature = -45 + (175.0f)*((sample_data[0] << 8U) | sample_data[1]) / (65536);
-  *humidity = (100.0f)*((sample_data[3] << 8U) | sample_data[4]) / (65536);
-
-  return 0; // TODO: Return Error
-}
-
-
-void saadc_callback_handler(nrf_drv_saadc_evt_t const *p_event)
-{
-}
-
-
-void saadc_init(void)
-{
-  ret_code_t err_code;
-
-  nrf_saadc_channel_config_t channel_config = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN0);
-
-  err_code = nrf_drv_saadc_init(NULL, saadc_callback_handler);
-  APP_ERROR_CHECK(err_code);
-
-  err_code = nrfx_saadc_channel_init(0, &channel_config);
-  APP_ERROR_CHECK(err_code);
-}
+#include "sensors.h"
+#include "temp_hum.h"
+#include "light.h"
 
 #define APP_BLE_CONN_CFG_TAG 1U
 #define APP_BLE_OBSERVER_PRIO 3U
@@ -182,7 +108,7 @@ void saadc_init(void)
 #define NEXT_CONN_PARMS_UPDATE_DELAY    APP_TIMER_TICKS(30000)
 #define MAX_CONN_PARMS_UPDATE_COUNT     3U
 
-#define LED_INTERVAL APP_TIMER_TICKS(3000)
+#define LED_INTERVAL APP_TIMER_TICKS(20000)
 
 
 
@@ -302,107 +228,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
   }
 }
 
-typedef struct
-{
-  float tempe_val;
-} tempe_data_t;
-
-typedef struct
-{
-  float humid_val;
-} humid_data_t;
-
-typedef struct
-{
-  uint16_t light_val;
-} light_data_t;
-
-typedef struct
-{
-  float moist_val;
-} moist_data_t;
-
-typedef struct
-{
-  tempe_data_t tempe_data;
-  humid_data_t humid_data;
-  light_data_t light_data;
-  moist_data_t moist_data;
-} sensor_data_t;
-
-enum sensor_type
-{
-  TEMPE_TYPE = 1,
-  HUMID_TYPE = 2,
-  LIGHT_TYPE = 3,
-  MOISTURE_TYPE = 4
-};
-
-
-uint16_t float_to_uint16(float num_float)
-{
-  uint16_t num_uint16;
-  uint8_t int_part;
-  uint8_t frac_part;
-
-  int_part = (int)num_float;
-  frac_part = (num_float - int_part) * 100U;
-
-  num_uint16 = ((uint16_t)int_part << 8U) | frac_part;
-
-  return num_uint16;
-}
-
-/*
-  Brief: Packs sensor data for BLE transmission
-  Arguments: 
-    Sensor data struct
-    Pointer to the array container
-  Return:
-    Success/Fail Value
-  Precondition:
-  Post-condition:
-    Pointer to the array container will contain the packed sensor data
-*/
-int pack_sensor_data(sensor_data_t *sensor_data, uint8_t *ble_manuf_data)
-{
-  uint16_t tempe_data;
-  uint16_t humid_data;
-  uint16_t light_data;
-  uint16_t moist_data;
-
-  // Check if size of the container is enough
-
-  tempe_data = sensor_data->tempe_data.tempe_val * 100U;
-  humid_data = sensor_data->humid_data.humid_val * 100U;
-  moist_data = sensor_data->moist_data.moist_val * 100U;
-  light_data = sensor_data->light_data.light_val;
-
-  // Little-Endian Order
-  // Temperature TLV
-  ble_manuf_data[0] = TEMPE_TYPE;
-  ble_manuf_data[1] = 2;
-  ble_manuf_data[2] = (uint8_t)((tempe_data & 0xFF00)>> 8U);
-  ble_manuf_data[3] = (uint8_t)(tempe_data & 0x00FF);
-
-  ble_manuf_data[4] = HUMID_TYPE;
-  ble_manuf_data[5] = 2;
-  ble_manuf_data[6] = (uint8_t)((humid_data & 0xFF00)>> 8U);
-  ble_manuf_data[7] = (uint8_t)(humid_data & 0x00FF);
-
-  ble_manuf_data[8] = LIGHT_TYPE;
-  ble_manuf_data[9] = 2;
-  ble_manuf_data[10] = (uint8_t)((light_data & 0xFF00)>> 8U);
-  ble_manuf_data[11] = (uint8_t)(light_data & 0x00FF);
-
-  ble_manuf_data[12] = MOISTURE_TYPE;
-  ble_manuf_data[13] = 2;
-  ble_manuf_data[14] = (uint8_t)((moist_data & 0xFF00)>> 8U);
-  ble_manuf_data[15] = (uint8_t)(moist_data & 0x00FF);
-}
-
-
-sensor_data_t sensor_data;
+extern sensor_data_t sensor_data;
 
 /* Step 8 */
 static void advertising_init(void)
@@ -725,10 +551,8 @@ int main()
   services_init();
   conn_params_init();
 
-  twi_init();
+  temp_hum_init();
   saadc_init();
-
-  NRF_LOG_INFO("BLE APP STARTED..");
 
   set_random_static_address();
 
@@ -738,19 +562,11 @@ int main()
 
   uint32_t err_code = app_timer_start(m_app_timer_id, LED_INTERVAL, NULL);
 
+  NRF_LOG_INFO("BLE APP STARTED..");
+
   while(1)
   {
     idle_state_handle();
-    
-    #if 0	
-    /* Empty loop. */
-    float temp, hum;
-         read_data_shtc(&temp, &hum);
-         NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
-         NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
-         NRF_LOG_FLUSH();
-         nrf_delay_ms(1000);
-    #endif
   }
   
 	

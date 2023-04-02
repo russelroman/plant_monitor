@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "sensors.h"
 
+sensor_data_t sensor_data;
+
 enum sensor_type
 {
   TEMPE_TYPE = 1,
