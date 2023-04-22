@@ -1,56 +1,3 @@
-/**
- * Copyright (c) 2014 - 2021, Nordic Semiconductor ASA
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
- *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
-/** @file
- *
- * @defgroup ble_sdk_app_template_main main.c
- * @{
- * @ingroup ble_sdk_app_template
- * @brief Template project main file.
- *
- * This file contains a template for creating a new application. It has the code necessary to wakeup
- * from button, advertise, get a connection restart advertising on disconnect and if no new
- * connection created go back to system-off mode.
- * It can easily be used as a starting point for creating a new application, the comments identified
- * with 'YOUR_JOB' indicates where and how you can customize.
- */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -69,203 +16,19 @@
 #include "nrf_sdh_ble.h"
 #include "nrf_sdh_soc.h"
 
-#include "nrf_ble_qwr.h"
-
 #include "nrf_ble_gatt.h"
-
-#include "ble_advdata.h"
-#include "ble_advertising.h"
 
 #include "ble_conn_params.h"
 
 #include "nrf_delay.h"
 
-#include "nrf_drv_saadc.h"
-
-#include "sensors.h"
-#include "temp_hum.h"
-#include "light.h"
-
 #include "ble_stack.h"
+
 
 #define APP_BLE_CONN_CFG_TAG 1U
 #define APP_BLE_OBSERVER_PRIO 3U
 
-#define APP_ADV_INTERVAL  300
-#define APP_ADV_DURATION  0   // No Timeout
-
-
-#define FIRST_CONN_PARMS_UPDATE_DELAY   APP_TIMER_TICKS(5000)
-#define NEXT_CONN_PARMS_UPDATE_DELAY    APP_TIMER_TICKS(30000)
-#define MAX_CONN_PARMS_UPDATE_COUNT     3U
-
-#define LED_INTERVAL APP_TIMER_TICKS(20000)
-
-
-NRF_BLE_QWR_DEF(m_qwr); // Use QWRS if connecting with multiple devices
 NRF_BLE_GATT_DEF(m_gatt);
-BLE_ADVERTISING_DEF(m_advertising);
-
-
-APP_TIMER_DEF(m_app_timer_id);
-
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;
-
-static void conn_params_error_handler(uint32_t nrf_error)
-{
-  APP_ERROR_HANDLER(nrf_error);
-}
-
-
-/* Step 10. 1 Handler for connection parameters update */
-static void on_conn_params_evt(ble_conn_params_evt_t *p_evt)
-{
-  ret_code_t err_code;
-
-  if(p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED)
-  {
-    err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
-    APP_ERROR_CHECK(err_code);
-  }
-
-  if(p_evt->evt_type == BLE_CONN_PARAMS_EVT_SUCCEEDED)
-  {
-    
-  }
-}
-
-
-/* Step 10 Setting connection parameters*/
-static void conn_params_init(void)
-{
-  ret_code_t err_code;
-
-  ble_conn_params_init_t cp_init;
-
-  memset(&cp_init, 0, sizeof(cp_init));
-
-  cp_init.p_conn_params = NULL;
-
-  cp_init.first_conn_params_update_delay = FIRST_CONN_PARMS_UPDATE_DELAY;
-
-  cp_init.next_conn_params_update_delay = NEXT_CONN_PARMS_UPDATE_DELAY;
-
-  cp_init.max_conn_params_update_count = MAX_CONN_PARMS_UPDATE_COUNT;
-
-  cp_init.start_on_notify_cccd_handle = BLE_GATT_HANDLE_INVALID;
-
-  cp_init.disconnect_on_fail = false;
-
-  cp_init.error_handler = conn_params_error_handler;
-
-  cp_init.evt_handler = on_conn_params_evt;
-
-  err_code = ble_conn_params_init(&cp_init);
-  APP_ERROR_CHECK(err_code);
-
-}
-
-
-/* Step 9.1 Error handler for queue writer */
-static void nrf_qwr_error_handler(uint32_t nrf_error)
-{
-  APP_ERROR_HANDLER(nrf_error);
-
-}
-
-
-/* Step 9. Initialize Services */
-static void services_init(void)
-{
-  ret_code_t err_code;
-
-  nrf_ble_qwr_init_t qwr_init = {0};
-
-  qwr_init.error_handler = nrf_qwr_error_handler;
-
-  err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
-  APP_ERROR_CHECK(err_code);
-}
-
-
-
-/* Step 8.1 Adv. Handlder*/
-static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
-{
-  ret_code_t err_code;
-
-  switch(ble_adv_evt)
-  {
-    case BLE_ADV_EVT_FAST:
-
-      NRF_LOG_INFO("Fast advertising...");
-      err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-      APP_ERROR_CHECK(err_code);
-
-      break;
-
-    case BLE_ADV_EVT_IDLE:
-
-      NRF_LOG_INFO("Idle...");
-      err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-      APP_ERROR_CHECK(err_code);
-
-      break;
-
-    default:
-      break;
-  }
-}
-
-extern sensor_data_t sensor_data;
-
-/* Step 8 */
-static void advertising_init(void)
-{
-  ret_code_t err_code;
-
-  ble_advertising_init_t init;
-  ble_advdata_manuf_data_t advert_data;
-
-  uint8_t manu_data[30];
-  sensor_data.tempe_data.tempe_val = 37.57f;
-  sensor_data.humid_data.humid_val = 37.57f;
-  sensor_data.light_data.light_val = 5200;
-  sensor_data.moist_data.moist_val = 37.57f;
-
-  pack_sensor_data(&sensor_data, manu_data);
-
-  memset(&init, 0, sizeof(init));
-
-  init.advdata.name_type = BLE_ADVDATA_SHORT_NAME;
-  init.advdata.short_name_len = 3;
-
-  init.advdata.include_appearance = false;
-
-  init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
-
-  init.config.ble_adv_fast_enabled = true;
-  init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-  init.config.ble_adv_fast_timeout = APP_ADV_DURATION;
-
-  advert_data.company_identifier = 0x0001;
-  advert_data.data.p_data = manu_data;
-  advert_data.data.size = 16;
-
-  init.advdata.p_manuf_specific_data = &advert_data;
-
-  init.evt_handler = on_adv_evt;
-
-  // Scan response
-  init.srdata.name_type = BLE_ADVDATA_FULL_NAME;
-
-  
-  err_code = ble_advertising_init(&m_advertising, &init);
-  APP_ERROR_CHECK(err_code);
-
-  ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
-}
-
 
 /* Step 4.1: Idle State Handle */
 static void idle_state_handle(void)
@@ -292,81 +55,6 @@ static void leds_init(void)
 }
 
 
-ble_advdata_t new_advdata;
-ble_advdata_t new_srdata;
-
-static void app_timer_handler(void *p_context)
-{
-  ret_code_t err_code;
-  
-  nrf_gpio_pin_toggle(LED_4);
-  uint8_t manu_data[30];
-
-  ble_advdata_manuf_data_t manuf_data;
-  manuf_data.data.p_data = manu_data;
-  manuf_data.data.size = 16;
-
-  manuf_data.company_identifier = 0x0001;
-
-  new_advdata.name_type = BLE_ADVDATA_SHORT_NAME;
-  new_advdata.short_name_len = 3;
-  
-  new_advdata.p_manuf_specific_data = &manuf_data;
-  new_srdata.name_type = BLE_ADVDATA_FULL_NAME;
-
-  /**/
-  #if 1
-  float temp;
-  float hum;
-  float lux_val = 0.0f;
-  float current_photo = 0;
-  float voltage_photo = 0;
-  float voltage_supply = 3.0f;
-  const float lux_sun = 10000.0f;
-  const float current_sun = 3.59e-3f;
-  const float photo_res_val = 470;
-
-  read_data_shtc(&temp, &hum);
-  NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
-  NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
- 
-  #endif
-
-  nrf_saadc_value_t adc_val;
-
-  nrfx_saadc_sample_convert(0, &adc_val);
-  NRF_LOG_INFO("ADC Value: %d", adc_val);
-
-  voltage_photo = (voltage_supply / 1024.0f) * adc_val;
-  current_photo = voltage_photo / photo_res_val;
-
-  lux_val = (current_photo / current_sun) * lux_sun;
-  NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
-  
-  sensor_data.tempe_data.tempe_val = temp;
-  sensor_data.humid_data.humid_val = hum;
-  sensor_data.light_data.light_val = lux_val;
-  sensor_data.moist_data.moist_val = 50;
-
-  pack_sensor_data(&sensor_data, manu_data);
-
-  err_code = ble_advertising_advdata_update(&m_advertising, &new_advdata, &new_srdata);
-  APP_ERROR_CHECK(err_code); 
-}
-
-/* Step 2: Init App timer */
-static void timers_init(void)
-{
-  ret_code_t err_code = app_timer_init();
-  APP_ERROR_CHECK(err_code);
-
-  err_code = app_timer_create(&m_app_timer_id, APP_TIMER_MODE_REPEATED, app_timer_handler);
-  APP_ERROR_CHECK(err_code);
-
-
-}
-
-
 /* Step 1: Init the Logger */
 static void log_init()
 {
@@ -374,16 +62,6 @@ static void log_init()
   APP_ERROR_CHECK(err_code);
 
   NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
-
-
-
-
-/* Step 11 Start Advertisement */
-static void advertising_start(void)
-{
-   ret_code_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-   APP_ERROR_CHECK(err_code);
 }
 
 
@@ -450,7 +128,7 @@ int main()
 
   get_random_static_address();
 
-  uint32_t err_code = app_timer_start(m_app_timer_id, LED_INTERVAL, NULL);
+  start_timer();
 
   NRF_LOG_INFO("BLE APP STARTED..");
 
@@ -458,8 +136,6 @@ int main()
   {
     idle_state_handle();
   }
-  
-	
 }
 
 
