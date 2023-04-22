@@ -16,19 +16,10 @@
 #include "nrf_sdh_ble.h"
 #include "nrf_sdh_soc.h"
 
-#include "nrf_ble_gatt.h"
-
-#include "ble_conn_params.h"
-
 #include "nrf_delay.h"
 
 #include "ble_stack.h"
 
-
-#define APP_BLE_CONN_CFG_TAG 1U
-#define APP_BLE_OBSERVER_PRIO 3U
-
-NRF_BLE_GATT_DEF(m_gatt);
 
 /* Step 4.1: Idle State Handle */
 static void idle_state_handle(void)
@@ -113,11 +104,7 @@ int main()
   leds_init();
   power_mgmt_init();
   ble_stack_init();
-  gap_params_init();
-  gatt_init();
   advertising_init();
-  services_init();
-  conn_params_init();
 
   temp_hum_init();
   saadc_init();

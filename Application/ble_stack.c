@@ -124,8 +124,6 @@ void ble_stack_init(void)
 
   err_code = nrf_sdh_ble_enable(&ram_start);
   APP_ERROR_CHECK(err_code);
-
-  NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
 
 
@@ -298,10 +296,6 @@ void advertising_init(void)
 
   init.evt_handler = on_adv_evt;
 
-  // Scan response
-  //init.srdata.name_type = BLE_ADVDATA_FULL_NAME;
-
-  
   err_code = ble_advertising_init(&m_advertising, &init);
   APP_ERROR_CHECK(err_code);
 
