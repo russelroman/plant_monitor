@@ -129,9 +129,15 @@ void advertising_init(void)
 void advertising_start(void)
 {
     ret_code_t err_code;
+
+    /* The ble_advertising_start sets the advertising mode 
+       to a mode according to its parameter. In this application,
+       the advertising mode must be Non-connectable and Non-scannable
+       so the GAP parameters must be configured after ble_advertising_start.
+    */
+
     err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
-
 
     err_code = sd_ble_gap_adv_stop(m_advertising.adv_handle);
     APP_ERROR_CHECK(err_code);
