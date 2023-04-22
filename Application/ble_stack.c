@@ -299,7 +299,7 @@ void advertising_init(void)
   init.evt_handler = on_adv_evt;
 
   // Scan response
-  init.srdata.name_type = BLE_ADVDATA_FULL_NAME;
+  //init.srdata.name_type = BLE_ADVDATA_FULL_NAME;
 
   
   err_code = ble_advertising_init(&m_advertising, &init);
@@ -311,8 +311,27 @@ void advertising_init(void)
 /* Step 11 Start Advertisement */
 void advertising_start(void)
 {
-   ret_code_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-   APP_ERROR_CHECK(err_code);
+    ret_code_t err_code;
+    err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    APP_ERROR_CHECK(err_code);
+
+
+    err_code = sd_ble_gap_adv_stop(m_advertising.adv_handle);
+    APP_ERROR_CHECK(err_code);
+ 
+    ble_gap_adv_params_t  adv_params;
+  
+    memcpy(&adv_params, &m_advertising.adv_params, sizeof(adv_params));
+
+    adv_params.properties.type = BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED;
+
+    err_code = sd_ble_gap_adv_set_configure(&m_advertising.adv_handle,
+                                            &m_advertising.adv_data,
+                                            &adv_params);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ble_gap_adv_start(m_advertising.adv_handle, m_advertising.conn_cfg_tag);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -374,7 +393,7 @@ static void app_timer_handler(void *p_context)
 
   pack_sensor_data(&sensor_data, manu_data);
 
-  err_code = ble_advertising_advdata_update(&m_advertising, &new_advdata, &new_srdata);
+  err_code = ble_advertising_advdata_update(&m_advertising, &new_advdata, NULL);
   APP_ERROR_CHECK(err_code); 
 }
 
