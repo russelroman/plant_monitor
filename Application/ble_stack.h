@@ -10,5 +10,7 @@ void advertising_init(void);
 void advertising_start(void);
 void start_timer(void);
 void timers_init(void);
+void set_random_static_address(void);
+void get_random_static_address(void);
 
 #endif

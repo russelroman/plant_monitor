@@ -407,3 +407,45 @@ void start_timer(void)
 {
   uint32_t err_code = app_timer_start(m_app_timer_id, LED_INTERVAL, NULL);
 }
+
+
+void set_random_static_address(void)
+{
+  ret_code_t err_code;
+
+  static ble_gap_addr_t rs_addr;
+
+  rs_addr.addr[0] = 0xCE;
+  rs_addr.addr[1] = 0x98;
+  rs_addr.addr[2] = 0x23;
+  rs_addr.addr[3] = 0x66;
+  rs_addr.addr[4] = 0x33;
+  rs_addr.addr[5] = 0xff;
+
+  rs_addr.addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC;
+
+  err_code = sd_ble_gap_addr_set(&rs_addr);
+  if(err_code != NRF_SUCCESS)
+  {
+    NRF_LOG_INFO("Failed to set random static address")
+  }
+}
+
+
+void get_random_static_address(void)
+{
+  ret_code_t err_code;
+
+  static ble_gap_addr_t my_addr;
+
+  err_code = sd_ble_gap_addr_get(&my_addr);
+
+  if(err_code == NRF_SUCCESS)
+  {
+    NRF_LOG_INFO("Address Type: %02X", my_addr.addr_type);
+    NRF_LOG_INFO("Device Address is %02X:%02X:%02X:%02X:%02X:%02X",
+                                    my_addr.addr[0],  my_addr.addr[1],
+                                    my_addr.addr[2],  my_addr.addr[3],
+                                    my_addr.addr[4],  my_addr.addr[5]   ) ;
+  }
+}
