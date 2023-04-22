@@ -137,6 +137,10 @@
       <file file_name="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/softdevice/common/nrf_sdh_ble.c" />
       <file file_name="../../../Middleware/nrf/nRF5_SDK_17_1_0/components/softdevice/common/nrf_sdh_soc.c" />
     </folder>
+    <file file_name="../../../Application/ble_stack.c" />
+    <file file_name="../../../Application/light.c" />
+    <file file_name="../../../Application/sensors.c" />
+    <file file_name="../../../Application/temp_hum.c" />
   </project>
   <configuration
     Name="Release"
