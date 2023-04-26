@@ -9,7 +9,8 @@
 #include "bsp_btn_ble.h"
 #include "nrf_pwr_mgmt.h"
 #include "ble_stack.h"
-
+#include "temp_hum.h"
+#include "light.h"
 
 /* Step 4.1: Idle State Handle */
 static void idle_state_handle(void)

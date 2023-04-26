@@ -99,12 +99,13 @@ void advertising_init(void)
   ble_advdata_manuf_data_t advert_data;
 
   uint8_t manu_data[30];
-  sensor_data.tempe_data.tempe_val = 37.57f;
-  sensor_data.humid_data.humid_val = 37.57f;
-  sensor_data.light_data.light_val = 5200;
-  sensor_data.moist_data.moist_val = 37.57f;
 
-  pack_sensor_data(&sensor_data, manu_data);
+  tempe_write(37.57f);
+  humid_write(37.57f);
+  light_write(5200);
+  moist_write(37.57);
+
+  pack_sensor_data(manu_data);
 
   memset(&init, 0, sizeof(init));
 
@@ -212,16 +213,16 @@ static void app_timer_handler(void *p_context)
 
   lux_val = (current_photo / current_sun) * lux_sun;
   NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
-  
-  sensor_data.tempe_data.tempe_val = temp;
-  sensor_data.humid_data.humid_val = hum;
-  sensor_data.light_data.light_val = lux_val;
-  sensor_data.moist_data.moist_val = 50;
 
-  pack_sensor_data(&sensor_data, manu_data);
+  tempe_write(temp);
+  humid_write(hum);
+  light_write(lux_val);
+  moist_write(50);
+
+  pack_sensor_data(manu_data);
 
   err_code = ble_advertising_advdata_update(&m_advertising, &new_advdata, NULL);
-  APP_ERROR_CHECK(err_code); 
+  APP_ERROR_CHECK(err_code);
 }
 
 /* Step 2: Init App timer */
