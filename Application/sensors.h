@@ -42,5 +42,6 @@ void light_write(float light);
 float moist_read(void);
 void moist_write(float moisture);
 int pack_sensor_data(uint8_t *ble_manuf_data);
+void sensor_data_update(void);
 
 #endif

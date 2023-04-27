@@ -53,20 +53,17 @@ int main()
   timers_init();
   leds_init();
   power_mgmt_init();
-  ble_stack_init();
-  advertising_init();
-
+  
   temp_hum_init();
   saadc_init();
 
   set_random_static_address();
-
-  advertising_start();
-
+  ble_stack_init();
+  advertising_init();
   get_random_static_address();
-
+  advertising_start();
   start_timer();
-
+  
   NRF_LOG_INFO("BLE APP STARTED..");
 
   while(1)

@@ -100,11 +100,7 @@ void advertising_init(void)
 
   uint8_t manu_data[30];
 
-  tempe_write(37.57f);
-  humid_write(37.57f);
-  light_write(5200);
-  moist_write(37.57);
-
+  sensor_data_update();
   pack_sensor_data(manu_data);
 
   memset(&init, 0, sizeof(init));
@@ -188,37 +184,8 @@ static void app_timer_handler(void *p_context)
   
   new_advdata.p_manuf_specific_data = &manuf_data;
   new_srdata.name_type = BLE_ADVDATA_FULL_NAME;
-
-  float temp;
-  float hum;
-  float lux_val = 0.0f;
-  float current_photo = 0;
-  float voltage_photo = 0;
-  float voltage_supply = 3.0f;
-  const float lux_sun = 10000.0f;
-  const float current_sun = 3.59e-3f;
-  const float photo_res_val = 470;
-
-  read_data_shtc(&temp, &hum);
-  NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
-  NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
-
-  nrf_saadc_value_t adc_val;
-
-  nrfx_saadc_sample_convert(0, &adc_val);
-  NRF_LOG_INFO("ADC Value: %d", adc_val);
-
-  voltage_photo = (voltage_supply / 1024.0f) * adc_val;
-  current_photo = voltage_photo / photo_res_val;
-
-  lux_val = (current_photo / current_sun) * lux_sun;
-  NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
-
-  tempe_write(temp);
-  humid_write(hum);
-  light_write(lux_val);
-  moist_write(50);
-
+  
+  sensor_data_update();
   pack_sensor_data(manu_data);
 
   err_code = ble_advertising_advdata_update(&m_advertising, &new_advdata, NULL);
