@@ -19,10 +19,11 @@ enum sensor_type
 float lux_val = 0.0f;
 float current_photo = 0;
 float voltage_photo = 0;
-float voltage_supply = 3.0f;
+float ref_voltage = 3.0 / 4;
 const float lux_sun = 10000.0f;
 const float current_sun = 3.59e-3f;
 const float photo_res_val = 470;
+const float scaling = 4;
 
 static sensor_data_t sensor_data;
 
@@ -105,6 +106,8 @@ int pack_sensor_data(uint8_t *ble_manuf_data)
   ble_manuf_data[15] = (uint8_t)(moist_data & 0x00FF);
 }
 
+
+
 void sensor_data_update(void)
 {
   float temp = 30.0f;
@@ -119,15 +122,26 @@ void sensor_data_update(void)
   nrfx_saadc_sample_convert(0, &adc_val);
   NRF_LOG_INFO("ADC Value: %d", adc_val);
 
-  voltage_photo = (voltage_supply / 1024.0f) * adc_val;
+  if(adc_val < 0)
+  {
+    adc_val = 0;
+  }
+
+  voltage_photo = (ref_voltage / 1024.0f) * adc_val * scaling;
   current_photo = voltage_photo / photo_res_val;
 
   lux_val = (current_photo / current_sun) * lux_sun;
   NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
+
+  float moist_val;
 
   tempe_write(temp);
   humid_write(hum);
   light_write(lux_val);
   moist_write(50);
 }
+
+
+
+
 

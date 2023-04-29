@@ -226,7 +226,7 @@ void set_random_static_address(void)
   err_code = sd_ble_gap_addr_set(&rs_addr);
   if(err_code != NRF_SUCCESS)
   {
-    NRF_LOG_INFO("Failed to set random static address")
+    NRF_LOG_INFO("Failed to set random static address");
   }
 }
 
