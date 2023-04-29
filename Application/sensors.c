@@ -7,6 +7,7 @@
 #include "nrf_log_default_backends.h"
 
 #include "nrf_drv_saadc.h"
+#include "light.h"
 
 enum sensor_type
 {
@@ -113,14 +114,25 @@ void sensor_data_update(void)
   float temp = 30.0f;
   float hum = 60.0f;
 
+  ret_code_t err_code;
+
   read_data_shtc(&temp, &hum);
   NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
   NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
 
   nrf_saadc_value_t adc_val;
+  nrf_saadc_value_t bat_volt;
+
+  saadc_init();
 
   nrfx_saadc_sample_convert(0, &adc_val);
   NRF_LOG_INFO("ADC Value: %d", adc_val);
+
+  nrfx_saadc_sample_convert(1, &bat_volt);
+  NRF_LOG_INFO("Battery ADC: %d", bat_volt);
+  NRF_LOG_INFO("Bat Voltage: " NRF_LOG_FLOAT_MARKER "V", NRF_LOG_FLOAT(bat_volt * (3.6 / 1024)));
+
+  nrf_drv_saadc_uninit();
 
   if(adc_val < 0)
   {

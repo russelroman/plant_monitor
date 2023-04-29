@@ -55,7 +55,7 @@ int main()
   power_mgmt_init();
   
   temp_hum_init();
-  saadc_init();
+  //saadc_init();
 
   set_random_static_address();
   ble_stack_init();

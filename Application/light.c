@@ -14,8 +14,7 @@ void saadc_init(void)
 
   //nrf_saadc_channel_config_t channel_config = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN0);
 
-  #if 1
-  nrf_saadc_channel_config_t channel_config = 
+  nrf_saadc_channel_config_t channel_config_light = 
   {                                                   
     .resistor_p = NRF_SAADC_RESISTOR_DISABLED,      
     .resistor_n = NRF_SAADC_RESISTOR_DISABLED,      
@@ -27,11 +26,17 @@ void saadc_init(void)
     .pin_p      = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN0),    
     .pin_n      = NRF_SAADC_INPUT_DISABLED 
   };
-  #endif
+
+  nrf_saadc_channel_config_t channel_config_bat = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
+
 
   err_code = nrf_drv_saadc_init(NULL, saadc_callback_handler);
   APP_ERROR_CHECK(err_code);
 
-  err_code = nrfx_saadc_channel_init(0, &channel_config);
+
+  err_code = nrfx_saadc_channel_init(0, &channel_config_light);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = nrfx_saadc_channel_init(1, &channel_config_bat);
   APP_ERROR_CHECK(err_code);
 }
