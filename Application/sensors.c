@@ -17,14 +17,17 @@ enum sensor_type
   MOISTURE_TYPE = 4
 };
 
-float lux_val = 0.0f;
-float current_photo = 0;
-float voltage_photo = 0;
-float ref_voltage = 3.0 / 4;
-const float lux_sun = 10000.0f;
-const float current_sun = 3.59e-3f;
-const float photo_res_val = 470;
-const float scaling = 4;
+
+/*
+  10,000 Lux = Max Ambient Sunlight
+  The Collector Current is 3.6mA at 10,000 Lux.
+  Using 450 ohms emitter resitor, the adc value
+  is 461. And emitter voltage is 1.62 V
+*/
+const uint16_t sun_lux = 10000;
+
+const float scaling = 6;
+const float ref_voltage = 0.6;  
 
 static sensor_data_t sensor_data;
 
@@ -139,10 +142,12 @@ void sensor_data_update(void)
     adc_val = 0;
   }
 
-  voltage_photo = (ref_voltage / 1024.0f) * adc_val * scaling;
-  current_photo = voltage_photo / photo_res_val;
+  float lux_val = 0;
+  float voltage_photo = 0;
 
-  lux_val = (current_photo / current_sun) * lux_sun;
+  voltage_photo = (ref_voltage / 1024.0f) * adc_val * scaling;
+  lux_val = (voltage_photo / 1.62f) * sun_lux;
+
   NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
 
   float moist_val;
