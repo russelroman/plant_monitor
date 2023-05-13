@@ -61,6 +61,8 @@ int read_data_shtc(float *temperature, float *humidity)
   nrf_delay_ms(20);  // Measure Time for Normal Mode.
   nrf_drv_twi_rx(&m_twi, address, sample_data, sizeof(sample_data));
 
+  nrf_drv_twi_tx(&m_twi, address, sleep_command, sizeof(sleep_command), false);
+
   // TODO: Verify checksum
 
   *temperature = -45 + (175.0f)*((sample_data[0] << 8U) | sample_data[1]) / (65536);
