@@ -111,7 +111,6 @@ int pack_sensor_data(uint8_t *ble_manuf_data)
 }
 
 
-
 void sensor_data_update(void)
 {
   float temp = 30.0f;
@@ -123,29 +122,33 @@ void sensor_data_update(void)
   NRF_LOG_INFO("Temp: " NRF_LOG_FLOAT_MARKER " C", NRF_LOG_FLOAT(temp));
   NRF_LOG_INFO("Hum: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(hum));
 
-  nrf_saadc_value_t adc_val;
-  nrf_saadc_value_t bat_volt;
+  nrf_saadc_value_t light_adc_val;
+  nrf_saadc_value_t bat_adc_val;
 
   saadc_init();
 
-  nrfx_saadc_sample_convert(0, &adc_val);
-  NRF_LOG_INFO("ADC Value: %d", adc_val);
+  nrfx_saadc_sample_convert(0, &light_adc_val);
+  NRF_LOG_INFO("Light ADC Value: %d", light_adc_val);
 
-  nrfx_saadc_sample_convert(1, &bat_volt);
-  NRF_LOG_INFO("Battery ADC: %d", bat_volt);
-  NRF_LOG_INFO("Bat Voltage: " NRF_LOG_FLOAT_MARKER "V", NRF_LOG_FLOAT(bat_volt * (3.6 / 1024)));
+  float battery_voltage = 3.2;
+
+  nrfx_saadc_sample_convert(1, &bat_adc_val);
+  NRF_LOG_INFO("Battery ADC: %d", bat_adc_val);
+
+  battery_voltage = bat_adc_val * (ref_voltage / 1024) * scaling;
+  NRF_LOG_INFO("Battery Voltage: " NRF_LOG_FLOAT_MARKER "V", NRF_LOG_FLOAT(battery_voltage));
 
   nrf_drv_saadc_uninit();
 
-  if(adc_val < 0)
+  if(light_adc_val < 0)
   {
-    adc_val = 0;
+    light_adc_val = 0;
   }
 
   float lux_val = 0;
   float voltage_photo = 0;
 
-  voltage_photo = (ref_voltage / 1024.0f) * adc_val * scaling;
+  voltage_photo = (ref_voltage / 1024.0f) * light_adc_val * scaling;
   lux_val = (voltage_photo / 1.62f) * sun_lux;
 
   NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
