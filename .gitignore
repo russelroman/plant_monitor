@@ -1,5 +1,13 @@
 Projects/nrf/ses/Output/
 Middleware/nrf/nRF5_SDK_17_1_0/
 Middleware/nrf/soft_device/
+Projects/esp32/send_ble_data/main/wifi_credentials.h
+Projects/esp32/send_ble_data/main/api_key.h
+Projects/esp32/send_ble_data/main/build
+Projects/esp32/send_ble_data/.vscode
+Projects/esp32/send_ble_data/build
+
+
+
 
 
