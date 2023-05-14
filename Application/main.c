@@ -12,7 +12,7 @@
 #include "temp_hum.h"
 #include "light.h"
 
-/* Step 4.1: Idle State Handle */
+
 static void idle_state_handle(void)
 {
   if(NRF_LOG_PROCESS() == false)
@@ -21,7 +21,7 @@ static void idle_state_handle(void)
   }
 }
 
-/* Step 4: Power Management */
+
 static void power_mgmt_init(void)
 {
   ret_code_t err_code = nrf_pwr_mgmt_init();
@@ -29,7 +29,6 @@ static void power_mgmt_init(void)
 }
 
 
-/* Step 3: BPS Init (LEDS) */
 static void leds_init(void)
 {
   ret_code_t err_code = bsp_init(BSP_INIT_LEDS, NULL);
@@ -37,7 +36,6 @@ static void leds_init(void)
 }
 
 
-/* Step 1: Init the Logger */
 static void log_init()
 {
   ret_code_t err_code = NRF_LOG_INIT(NULL);
@@ -53,10 +51,7 @@ int main()
   timers_init();
   leds_init();
   power_mgmt_init();
-  
   temp_hum_init();
-  //saadc_init();
-
   set_random_static_address();
   ble_stack_init();
   advertising_init();
