@@ -5,7 +5,7 @@ My goal in this project is to learn HTTP and BLE by modifying b-parasite based o
 needs.
 
 Plant Monitor will get the soil moisture, illuminance, temperature and humidity of the environment.
-The device will transmit to the ESP32 Gateway through BLE packets. Then the gateway will transmit
+The device will transmit sensor data to ESP32 Gateway through BLE packets. Then the gateway will transmit
 the sensor data to ThingSpeak for monitoring and analysis through HTTP Requests.
 
 ## Building the Project
