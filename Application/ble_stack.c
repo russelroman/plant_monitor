@@ -21,7 +21,7 @@
 
 #include "nrf_drv_saadc.h"
 
-#define LED_INTERVAL APP_TIMER_TICKS(20000)
+#define LED_INTERVAL APP_TIMER_TICKS(5000)  // Unit of 1 ms
 
 #define APP_BLE_CONN_CFG_TAG 1U
 
@@ -35,7 +35,7 @@ BLE_ADVERTISING_DEF(m_advertising);
 APP_TIMER_DEF(m_app_timer_id);
 
 extern sensor_data_t sensor_data;
-
+static ble_advdata_t new_advdata;
 
 void ble_stack_init(void)
 {
@@ -62,7 +62,6 @@ void ble_stack_init(void)
 }
 
 
-/* Step 8.1 Adv. Handlder*/
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
   ret_code_t err_code;
@@ -72,17 +71,13 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     case BLE_ADV_EVT_FAST:
 
       NRF_LOG_INFO("Fast advertising...");
-      //err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-      //APP_ERROR_CHECK(err_code);
 
       break;
 
     case BLE_ADV_EVT_IDLE:
 
       NRF_LOG_INFO("Idle...");
-      //err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-      //APP_ERROR_CHECK(err_code);
-
+     
       break;
 
     default:
@@ -90,7 +85,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
   }
 }
 
-/* Step 8 */
+
 void advertising_init(void)
 {
   ret_code_t err_code;
@@ -130,7 +125,7 @@ void advertising_init(void)
   ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
 }
 
-/* Step 11 Start Advertisement */
+
 void advertising_start(void)
 {
     ret_code_t err_code;
@@ -163,13 +158,12 @@ void advertising_start(void)
 }
 
 
-ble_advdata_t new_advdata;
-ble_advdata_t new_srdata;
+
 
 static void app_timer_handler(void *p_context)
 {
   ret_code_t err_code;
-  
+ 
   nrf_gpio_pin_toggle(LED_4);
   uint8_t manu_data[30];
 
@@ -183,7 +177,6 @@ static void app_timer_handler(void *p_context)
   new_advdata.short_name_len = 3;
   
   new_advdata.p_manuf_specific_data = &manuf_data;
-  new_srdata.name_type = BLE_ADVDATA_FULL_NAME;
   
   sensor_data_update();
   pack_sensor_data(manu_data);
@@ -192,7 +185,7 @@ static void app_timer_handler(void *p_context)
   APP_ERROR_CHECK(err_code);
 }
 
-/* Step 2: Init App timer */
+
 void timers_init(void)
 {
   ret_code_t err_code = app_timer_init();
