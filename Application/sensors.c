@@ -72,6 +72,16 @@ void moist_write(float moisture)
   sensor_data.moist_data.moist_val = moisture; 
 }
 
+static inline float get_soil_moisture_percent(float battery_voltage,
+                                              int16_t raw_adc_output) {
+  const double x = battery_voltage;
+  const double dry = -11.7f * x * x + 101.0f * x + 306.0f;
+  const double wet = 3.42f * x * x - 4.98f * x + 19.0f;
+  const float percent = (raw_adc_output - dry) / (wet - dry);
+  
+  return percent;
+}
+
 
 int pack_sensor_data(uint8_t *ble_manuf_data)
 {
@@ -124,21 +134,14 @@ void sensor_data_update(void)
 
   nrf_saadc_value_t light_adc_val;
   nrf_saadc_value_t bat_adc_val;
+  nrf_saadc_value_t soil_adc_val;
 
   saadc_init();
 
+  /* Light Sensor */
+
   nrfx_saadc_sample_convert(0, &light_adc_val);
   NRF_LOG_INFO("Light ADC Value: %d", light_adc_val);
-
-  float battery_voltage = 3.2;
-
-  nrfx_saadc_sample_convert(1, &bat_adc_val);
-  NRF_LOG_INFO("Battery ADC: %d", bat_adc_val);
-
-  battery_voltage = bat_adc_val * (ref_voltage / 1024) * scaling;
-  NRF_LOG_INFO("Battery Voltage: " NRF_LOG_FLOAT_MARKER "V", NRF_LOG_FLOAT(battery_voltage));
-
-  nrf_drv_saadc_uninit();
 
   if(light_adc_val < 0)
   {
@@ -152,13 +155,43 @@ void sensor_data_update(void)
   lux_val = (voltage_photo / 1.62f) * sun_lux;
 
   NRF_LOG_INFO("Lux: " NRF_LOG_FLOAT_MARKER, NRF_LOG_FLOAT(lux_val));
+  
+  /* Battery */
 
-  float moist_val;
+  float battery_voltage = 3.2;
+
+  nrfx_saadc_sample_convert(1, &bat_adc_val);
+  NRF_LOG_INFO("Battery ADC: %d", bat_adc_val);
+
+  battery_voltage = bat_adc_val * (ref_voltage / 1024) * scaling;
+  NRF_LOG_INFO("Battery Voltage: " NRF_LOG_FLOAT_MARKER "V", NRF_LOG_FLOAT(battery_voltage));
+
+  /* Moisture */
+
+  float soil_moisture;
+
+  nrfx_saadc_sample_convert(5, &soil_adc_val);
+  NRF_LOG_INFO("Moisture ADC: %d", soil_adc_val);
+
+  if(soil_adc_val < 0)
+  {
+    soil_adc_val = 0;
+  }
+
+  soil_moisture = get_soil_moisture_percent(battery_voltage, soil_adc_val);
+
+  if(soil_moisture < 0)
+  {
+    soil_moisture = 0;
+  }
+  NRF_LOG_INFO("Soil Moisture: " NRF_LOG_FLOAT_MARKER " %%", NRF_LOG_FLOAT(soil_moisture));
+
+  nrf_drv_saadc_uninit();
 
   tempe_write(temp);
   humid_write(hum);
   light_write(lux_val);
-  moist_write(50);
+  moist_write(soil_moisture);
 }
 
 
