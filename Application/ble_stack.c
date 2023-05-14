@@ -8,34 +8,29 @@
 #include "nrf_log_default_backends.h"
 
 #include "ble.h"
-
 #include "ble_advertising.h"
-
 #include "app_timer.h"
-
 #include "bsp.h"
+#include "nrf_drv_saadc.h"
 
 #include "sensors.h"
 #include "temp_hum.h"
 #include "light.h"
 
-#include "nrf_drv_saadc.h"
 
-#define LED_INTERVAL APP_TIMER_TICKS(5000)  // Unit of 1 ms
-
+#define SENSOR_UPDATE_INTERVAL APP_TIMER_TICKS(5000)  // Unit of 1 ms
 #define APP_BLE_CONN_CFG_TAG 1U
-
 #define DEVICE_NAME         "x-parasite"
-
 #define APP_ADV_INTERVAL  3200     // Units of 0.625 ms
 #define APP_ADV_DURATION  0       // No Timeout
 
-BLE_ADVERTISING_DEF(m_advertising);
 
+BLE_ADVERTISING_DEF(m_advertising);
 APP_TIMER_DEF(m_app_timer_id);
 
-extern sensor_data_t sensor_data;
+
 static ble_advdata_t new_advdata;
+
 
 void ble_stack_init(void)
 {
@@ -197,7 +192,7 @@ void timers_init(void)
 
 void start_timer(void)
 {
-  uint32_t err_code = app_timer_start(m_app_timer_id, LED_INTERVAL, NULL);
+  uint32_t err_code = app_timer_start(m_app_timer_id, SENSOR_UPDATE_INTERVAL, NULL);
 }
 
 
