@@ -21,7 +21,7 @@
 
 #include "nrf_drv_saadc.h"
 
-#define LED_INTERVAL APP_TIMER_TICKS(5000)
+#define LED_INTERVAL APP_TIMER_TICKS(20000)
 
 #define APP_BLE_CONN_CFG_TAG 1U
 
