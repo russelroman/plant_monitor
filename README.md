@@ -33,6 +33,43 @@ Middleware
 The nrf_sdk_xx folder will contain the SDK.
 Go to Projects -> nrf -> ses and open plant_monitor.emProject. Click Build.
 
+### Building the Project for ESP32 Gateway
+
+Tools:<br />
+SDK: ESP-IDF 5.0<br />
+
+ESP-IDF uses CMake to generate Makefile for the build system.
+
+The project needs the WiFi Credentials and the API Key of Thingspeak channel.
+Thus, the user needs to create wifi_credentials.h and api_key.h header files
+inside the Projects/esp32/send_ble_data/main folder.
+
+The wifi_credentials.h must contain the following macros:
+
+![image](https://github.com/russelroman/plant_monitor/assets/120916430/1d6fc85a-2d75-48f8-ad15-12c3242637f2)
+
+And the api_key.h must contain the following macros:
+
+![image](https://github.com/russelroman/plant_monitor/assets/120916430/4521980b-c2af-4c92-bbd2-1fa3f38b6f58)
+
+Open the ESP-IDF 5.0 command prompt. Please go to Project/esp32/send_ble_data. And enter the following
+command to build the project.
+
+    idf.py build
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
