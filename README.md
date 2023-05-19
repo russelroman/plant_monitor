@@ -57,6 +57,15 @@ command to build the project.
 
     idf.py build
 
+## Hardware Components
+
+1. NRF52840 Dongle
+2. Capacitive Moisture Sensor v1.2
+3. Adafruit Sensirion SHTC3 Temperature & Humidity Sensor
+4. Adafruit ALS-PT19 Analog Light Sensor Breakout
+5. ESP32 DevKit-C
+
+
 
 
 
