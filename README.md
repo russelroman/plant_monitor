@@ -8,6 +8,9 @@ Plant Monitor will get the soil moisture, illuminance, temperature and humidity 
 The device will transmit sensor data to ESP32 Gateway through BLE packets. Then the gateway will transmit
 the sensor data to ThingSpeak for monitoring and analysis through HTTP Requests.
 
+![image](https://github.com/russelroman/plant_monitor/assets/120916430/dd65a0ef-c255-4a52-85a8-3f54af4952ce)
+
+
 ## Building the Project
 
 The project uses the NRF SDK from Nordic Semiconductors for the BLE device.
